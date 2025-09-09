@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Side Hustle Idea Generator</title>
+  <style>
+    :root{
+      --bg:#0b0f14;--panel:#101825;--ink:#eaf2fb;--muted:#9fb3c8;--accent:#00d18f;--accent2:#4cc9f0;--card:#0f1724;
+      --ring:rgba(0,209,143,.5);
+    }
+    body{margin:0;background:radial-gradient(1200px 700px at 80% -10%, #14202d 0%, var(--bg) 60%) fixed;color:var(--ink);font:16px/1.6 system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial}
+    .wrap{max-width:1080px;margin:32px auto;padding:16px}
+    .app{background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(255,255,255,.02));border:1px solid rgba(255,255,255,.08);border-radius:16px;box-shadow:0 10px 30px rgba(0,0,0,.35);overflow:hidden;position:relative}
+    header{padding:20px 20px 6px;position:relative}
+    h1{margin:0 0 6px;font-size:clamp(22px,3.2vw,34px)}
+    .sub{margin:0 0 14px;color:var(--muted);font-size:14px}
+    .branding{position:absolute;top:20px;right:20px;font-size:12px;color:var(--muted);font-weight:600}
+
+    .controls{display:grid;grid-template-columns:repeat(12,1fr);gap:10px;padding:0 20px 16px}
+    .ctrl{grid-column:span 6;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:10px}
+    .ctrl label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px}
+    select{width:100%;padding:8px 10px;border-radius:8px;border:1px solid rgba(255,255,255,.12);background:#0c1420;color:var(--ink)}
+    select:focus{border-color:var(--ring);box-shadow:0 0 0 2px var(--ring)}
+
+    .buttons{display:flex;gap:10px;flex-wrap:wrap;padding:0 20px 18px}
+    button{border:0;border-radius:12px;padding:12px 16px;cursor:pointer;background:linear-gradient(180deg,rgba(0,209,143,.18),rgba(0,209,143,.12));color:var(--ink);font-weight:600;letter-spacing:.2px;outline:1px solid rgba(0,209,143,.35)}
+    button:hover{transform:translateY(-1px);outline-color:var(--accent)}
+
+    .card{background:var(--card);border-top:1px solid rgba(255,255,255,.08);padding:20px}
+    .hidden{display:none}
+    .idea-title{font-size:clamp(18px,2.2vw,26px);margin:0 0 6px}
+    .muted{color:var(--muted);font-size:13px}
+    .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+    @media (max-width:820px){.ctrl{grid-column:span 12}.grid{grid-template-columns:1fr}}
+    .block{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:12px}
+    .block h3{margin:0 0 8px;font-size:15px}
+    ul,ol{margin:0;padding-left:18px}
+    .footer{padding:12px 20px 20px;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+    .tiny{font-size:12px;color:var(--muted)}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <main class="app" role="main">
+      <header>
+        <h1>Side Hustle Idea Generator</h1>
+        <span class="branding">Powered by Ai Concierge</span>
+        <p class="sub">Choose industry and online/offline preference, then click Generate. Every idea is designed to reach at least $1,000/month after expenses.</p>
+      </header>
+
+      <!-- Controls -->
+      <section class="controls" aria-label="controls">
+        <div class="ctrl">
+          <label for="industrySel">Industry</label>
+          <select id="industrySel">
+            <option value="">Surprise me</option>
+            <option value="home_services">Home Services</option>
+            <option value="digital">Digital/Online</option>
+            <option value="creative">Creative/Arts</option>
+            <option value="education">Education/Coaching</option>
+            <option value="health">Health & Wellness</option>
+            <option value="finance">Finance/Consulting</option>
+            <option value="retail">Retail/Reselling</option>
+          </select>
+        </div>
+        <div class="ctrl">
+          <label for="modeSel">Mode</label>
+          <select id="modeSel">
+            <option value="">Surprise me</option>
+            <option value="online">Online</option>
+            <option value="offline">Offline</option>
+          </select>
+        </div>
+      </section>
+
+      <section class="buttons">
+        <button id="generate" type="button">🎲 Generate idea</button>
+        <button id="another" class="ghost" type="button">↻ Another</button>
+        <button id="copy" class="copy" type="button">📋 Copy Idea</button>
+      </section>
+
+      <!-- Output -->
+      <section id="result" class="card hidden" aria-live="polite">
+        <h2 id="ideaTitle" class="idea-title"></h2>
+        <p id="ideaDesc" class="muted"></p>
+        <div class="grid">
+          <div class="block">
+            <h3>Quick‑start steps</h3>
+            <ol id="steps"></ol>
+          </div>
+          <div class="block">
+            <h3>Packages / Pricing</h3>
+            <ul id="packages"></ul>
+          </div>
+          <div class="block">
+            <h3>Acquisition Channels</h3>
+            <ul id="channels"></ul>
+          </div>
+          <div class="block">
+            <h3>Alternate Spins</h3>
+            <ul id="alts"></ul>
+          </div>
+        </div>
+      </section>
+
+      <div class="footer tiny">
+        <span id="status"></span>
+        <span>Tip: tighten scope; land 2 paid customers fast.</span>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    'use strict';
+    const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
+    const rand = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+    const uniq = (arr, n) => { const a=[...arr], out=[]; while(a.length && out.length<n){ out.push(a.splice(Math.floor(Math.random()*a.length),1)[0]); } return out; };
+
+    const INDUSTRY_MAP = {
+      home_services: ['window washing','mobile car detailing','pressure washing','lawn mowing + edging','pool maintenance','gutter cleaning','garage organization','furniture assembly','estate sale prep','handyman punchlist','moving-day labor','dog walking','pet grooming','landscape design','solar panel cleaning'],
+      digital: ['AI prompt crafting','social media management','blog ghostwriting','SEO blog writing','affiliate niche site','dropshipping store','website building','Shopify store setup','WordPress fixes','Etsy SEO service','Pinterest marketing','Instagram Reels editing','TikTok content coaching','LinkedIn personal branding','YouTube channel management'],
+      creative: ['wedding photography','family portraits','sports videography','children’s book illustration','comic art commissions','pet portraits','voice acting','audiobook narration','custom stickers','t-shirt design','candle making','jewelry design','wood crafts','ceramics'],
+      education: ['language tutoring','SAT tutoring','math tutoring','science tutoring','coding bootcamp prep','career coaching','college admissions prep','Excel tutoring','Photoshop tutoring','video editing tutoring','music lessons','DJ services','public speaking coaching'],
+      health: ['fitness coaching','yoga instruction','pilates coaching','nutrition coaching','life coaching','relationship coaching','spiritual mentoring','massage therapy','reiki sessions','sound baths','meditation coaching','meditation retreats'],
+      finance: ['tax prep help','budget consulting','estate planning basics','insurance consulting','financial coaching','stock trading coaching','options trading coaching','personal finance YouTube channel','finance blog','Excel template packs'],
+      retail: ['thrift flipping','antique reselling','eBay reselling','Poshmark reselling','Mercari reselling','Facebook Marketplace flipping','garage sale flipping','farmers market stall','printables design','Etsy print-on-demand','online micro-courses']
+    };
+
+    const CHANNELS=['door-to-door flyers','Nextdoor Groups','Google Business Profile','Craigslist','Etsy shop','Gumroad','Calendly + Stripe link','local Chamber meetup','Instagram','TikTok','LinkedIn','Facebook Ads','Google Ads','YouTube'];
+
+    function buildIdea(opts){
+      const industryList = opts.industry && INDUSTRY_MAP[opts.industry] ? INDUSTRY_MAP[opts.industry] : Object.values(INDUSTRY_MAP).flat();
+      const niche = pick(industryList);
+      const ch = uniq(CHANNELS,3);
+      const mode = opts.mode || pick(['online','offline']);
+      const perUnit = rand(100,300);
+      const monthly = perUnit * 10;
+      const unit = mode==='online'? 'per project' : 'per job';
+      const title = `${niche} (${mode})`;
+      const desc = `Build a side hustle in ${niche}. Operate ${mode}. Charge around $${perUnit} ${unit}, aiming for 10+ clients monthly. That yields ~$${monthly}/month after expenses. Market via ${ch.join(', ')}.`;
+      const steps=[`Define a starter offer priced ~$${perUnit} ${unit}.`,`Create a booking/profile page.`,`Do 20 outreaches via ${ch[0]} to land the first 2 customers.`];
+      const packages=[`Basic: $${Math.round(perUnit*0.8)} ${unit}`,`Pro: $${perUnit} ${unit}`,`Premium: $${Math.round(perUnit*1.4)} ${unit}`];
+      const alts=[`${niche} but online course`,`${niche} as weekend gig`,`${niche} bundle with related service`];
+      return {title,desc,steps,packages,channels:ch,alts};
+    }
+
+    function renderIdea(i){
+      document.getElementById('ideaTitle').textContent=i.title;
+      document.getElementById('ideaDesc').textContent=i.desc;
+      document.getElementById('steps').innerHTML=i.steps.map(s=>`<li>${s}</li>`).join('');
+      document.getElementById('packages').innerHTML=i.packages.map(p=>`<li>${p}</li>`).join('');
+      document.getElementById('channels').innerHTML=i.channels.map(c=>`<li>${c}</li>`).join('');
+      document.getElementById('alts').innerHTML=i.alts.map(a=>`<li>${a}</li>`).join('');
+      document.getElementById('result').classList.remove('hidden');
+    }
+
+    function currentOptions(){
+      return {
+        industry: document.getElementById('industrySel').value || '',
+        mode: document.getElementById('modeSel').value || ''
+      };
+    }
+
+    function generate(){
+      const opts=currentOptions();
+      const idea=buildIdea(opts);
+      renderIdea(idea);
+    }
+
+    document.getElementById('generate').addEventListener('click', generate);
+    document.getElementById('another').addEventListener('click', generate);
+    document.getElementById('copy').addEventListener('click', async ()=>{
+      const t=document.getElementById('ideaTitle').textContent;
+      const d=document.getElementById('ideaDesc').textContent;
+      const steps=[...document.querySelectorAll('#steps li')].map((li,i)=>`${i+1}. ${li.textContent}`).join('\n');
+      const packages=[...document.querySelectorAll('#packages li')].map(li=>`- ${li.textContent}`).join('\n');
+      const chans=[...document.querySelectorAll('#channels li')].map(li=>`- ${li.textContent}`).join('\n');
+      const alts=[...document.querySelectorAll('#alts li')].map(li=>`- ${li.textContent}`).join('\n');
+      const text=`# ${t}\n\n${d}\n\n**Quick-start steps**\n${steps}\n\n**Packages / Pricing**\n${packages}\n\n**Acquisition Channels**\n${chans}\n\n**Alternate Spins**\n${alts}`;
+      try{ await navigator.clipboard.writeText(text); document.getElementById('status').textContent='Copied Idea!'; setTimeout(()=>document.getElementById('status').textContent='',1400);}catch(e){ document.getElementById('status').textContent='Copy failed'; setTimeout(()=>document.getElementById('status').textContent='',1400);} 
+    });
+
+    generate();
+  </script>
+</body>
+</html>
